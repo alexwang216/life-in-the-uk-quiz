@@ -1,8 +1,17 @@
 import { useState } from 'react'
-import PropTypes from 'prop-types'
+import type { Question, QuestionResult } from '../types'
 
-export default function Review({ incorrectQuestions, everIncorrectQuestions, questionResults, onJumpTo }) {
-  const [tab, setTab] = useState('current')
+interface Props {
+  incorrectQuestions: Question[]
+  everIncorrectQuestions: Question[]
+  questionResults: Record<string, QuestionResult>
+  onJumpTo: (id: string) => void
+}
+
+type Tab = 'current' | 'ever'
+
+export default function Review({ incorrectQuestions, everIncorrectQuestions, questionResults, onJumpTo }: Props) {
+  const [tab, setTab] = useState<Tab>('current')
 
   const list = tab === 'current' ? incorrectQuestions : everIncorrectQuestions
 
@@ -21,9 +30,7 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
         <button
           onClick={() => setTab('current')}
           className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
-            tab === 'current'
-              ? 'bg-red-700 text-white'
-              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+            tab === 'current' ? 'bg-red-700 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
           }`}
         >
           Still Incorrect
@@ -32,9 +39,7 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
         <button
           onClick={() => setTab('ever')}
           className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
-            tab === 'ever'
-              ? 'bg-amber-700 text-white'
-              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+            tab === 'ever' ? 'bg-amber-700 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
           }`}
         >
           Ever Missed
@@ -58,9 +63,7 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
             return (
               <div
                 key={q.id}
-                className={`bg-slate-800 border rounded-xl p-5 ${
-                  laterCorrected ? 'border-emerald-700' : 'border-slate-700'
-                }`}
+                className={`bg-slate-800 border rounded-xl p-5 ${laterCorrected ? 'border-emerald-700' : 'border-slate-700'}`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -104,13 +107,11 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
                 )}
 
                 <div className="mt-3">
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      q.priority <= 1 ? 'bg-emerald-900 text-emerald-300'
-                      : q.priority <= 3 ? 'bg-amber-900 text-amber-300'
-                      : 'bg-red-900 text-red-300'
-                    }`}
-                  >
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    q.priority <= 1 ? 'bg-emerald-900 text-emerald-300'
+                    : q.priority <= 3 ? 'bg-amber-900 text-amber-300'
+                    : 'bg-red-900 text-red-300'
+                  }`}>
                     {q.priority <= 1 ? '🟢 Easy' : q.priority <= 3 ? '🟡 Review' : '🔴 Hard'}
                   </span>
                 </div>
@@ -121,11 +122,4 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
       )}
     </div>
   )
-}
-
-Review.propTypes = {
-  incorrectQuestions: PropTypes.array.isRequired,
-  everIncorrectQuestions: PropTypes.array.isRequired,
-  questionResults: PropTypes.object.isRequired,
-  onJumpTo: PropTypes.func.isRequired,
 }

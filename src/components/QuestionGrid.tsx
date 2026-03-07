@@ -1,17 +1,12 @@
-import PropTypes from 'prop-types'
+import type { Question, QuestionResult } from '../types'
 
-/**
- * QuestionGrid — a compact grid of all 435 question IDs.
- * Colour code:
- *   - Dark slate (empty)  = not yet seen
- *   - Green               = answered correctly (at least once)
- *   - Amber               = answered incorrectly (at least once)
- *     Why amber? It's a "caution" colour — distinct from red (error) and
- *     green (success). It signals "needs more practice" without feeling like failure.
- *
- * Clicking any box jumps to that question.
- */
-export default function QuestionGrid({ questions, questionResults, onJumpTo }) {
+interface Props {
+  questions: Question[]
+  questionResults: Record<string, QuestionResult>
+  onJumpTo: (id: string) => void
+}
+
+export default function QuestionGrid({ questions, questionResults, onJumpTo }: Props) {
   const total = questions.length
   const correct = Object.values(questionResults).filter(r => r === 'correct').length
   const incorrect = Object.values(questionResults).filter(r => r === 'incorrect').length
@@ -20,11 +15,8 @@ export default function QuestionGrid({ questions, questionResults, onJumpTo }) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-white mb-1">Question Map</h2>
-      <p className="text-slate-400 text-sm mb-5">
-        Click any box to jump to that question.
-      </p>
+      <p className="text-slate-400 text-sm mb-5">Click any box to jump to that question.</p>
 
-      {/* Legend */}
       <div className="flex items-center gap-4 mb-5 text-xs text-slate-400">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-slate-700 inline-block border border-slate-600" />
@@ -40,7 +32,6 @@ export default function QuestionGrid({ questions, questionResults, onJumpTo }) {
         </span>
       </div>
 
-      {/* Grid — 15 columns on wide, fewer on small */}
       <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(36px, 1fr))' }}>
         {questions.map(q => {
           const result = questionResults[q.id]
@@ -62,10 +53,4 @@ export default function QuestionGrid({ questions, questionResults, onJumpTo }) {
       </div>
     </div>
   )
-}
-
-QuestionGrid.propTypes = {
-  questions: PropTypes.array.isRequired,
-  questionResults: PropTypes.object.isRequired,
-  onJumpTo: PropTypes.func.isRequired,
 }

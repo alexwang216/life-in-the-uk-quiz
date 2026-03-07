@@ -1,35 +1,38 @@
-import PropTypes from 'prop-types'
+import type { Question, Answer } from '../types'
 
-function buildClaudeUrl(question, correctAnswers) {
+interface Props {
+  question: Question
+  shuffledAnswers: Answer[]
+  selectedAnswer: Answer | null
+  selectedAnswers: Set<Answer>
+  submitted: boolean
+  isAnswered: boolean
+  wasLastCorrect: boolean
+  onAnswer: (answer: Answer) => void
+  onSubmit: () => void
+  onNext: () => void
+  priority: number
+}
+
+function buildClaudeUrl(question: string, correctAnswers: string[]): string {
   const answers = correctAnswers.join(', ')
   const prompt = `I'm studying for the Life in the UK test. The question is: "${question}". The correct answer is: "${answers}". Can you explain this in more detail to help me understand and remember it?`
   return `https://claude.ai/new?q=${encodeURIComponent(prompt)}`
 }
 
 export default function QuizCard({
-  question,
-  shuffledAnswers,
-  selectedAnswer,
-  selectedAnswers,
-  submitted,
-  isAnswered,
-  wasLastCorrect,
-  onAnswer,
-  onSubmit,
-  onNext,
-  priority,
-}) {
+  question, shuffledAnswers, selectedAnswer, selectedAnswers,
+  submitted, isAnswered, wasLastCorrect, onAnswer, onSubmit, onNext, priority,
+}: Props) {
   const isMulti = question.isMulti
   const correctAnswers = shuffledAnswers.filter(a => a.is_correct)
-
-  // For multi: has the user selected the right number yet?
   const expectedCount = correctAnswers.length
   const selectedCount = selectedAnswers.size
   const canSubmit = isMulti && !submitted && selectedCount > 0
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* Header row: Q number + type badge + priority */}
+      {/* Header: Q number + type badge + priority */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-400 uppercase tracking-widest">Q#{question.id}</span>
@@ -93,7 +96,6 @@ export default function QuizCard({
             >
               <span className="text-slate-400 mr-3 text-sm">{String.fromCharCode(65 + i)}.</span>
               {ans.answer}
-              {/* Checkbox indicator for multi-select */}
               {isMulti && !submitted && (
                 <span className={`float-right text-lg ${selectedAnswers.has(ans) ? 'text-indigo-400' : 'text-slate-600'}`}>
                   {selectedAnswers.has(ans) ? '☑' : '☐'}
@@ -104,7 +106,7 @@ export default function QuizCard({
         })}
       </div>
 
-      {/* Multi-select: progress hint + submit button */}
+      {/* Multi-select: progress hint + submit */}
       {isMulti && !submitted && (
         <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-slate-400">
@@ -127,14 +129,15 @@ export default function QuizCard({
             {wasLastCorrect ? '✓ Correct!' : '✗ Incorrect'}
           </p>
 
+          {/* 1. Next Question — primary action, shown first */}
           <button
             onClick={onNext}
             className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition-colors"
           >
             Next Question →
           </button>
-          
-          {/* Reference */}
+
+          {/* 2. Reference */}
           {question.reference && (
             <div className="bg-slate-800 border border-slate-600 rounded-xl p-4">
               <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">📖 Reference</p>
@@ -142,7 +145,7 @@ export default function QuizCard({
             </div>
           )}
 
-          {/* Ask Claude link */}
+          {/* 3. Ask Claude — secondary action */}
           <a
             href={buildClaudeUrl(question.question, correctAnswers.map(a => a.answer))}
             target="_blank"
@@ -157,18 +160,4 @@ export default function QuizCard({
       )}
     </div>
   )
-}
-
-QuizCard.propTypes = {
-  question: PropTypes.object.isRequired,
-  shuffledAnswers: PropTypes.array.isRequired,
-  selectedAnswer: PropTypes.object,
-  selectedAnswers: PropTypes.instanceOf(Set).isRequired,
-  submitted: PropTypes.bool.isRequired,
-  isAnswered: PropTypes.bool.isRequired,
-  wasLastCorrect: PropTypes.bool.isRequired,
-  onAnswer: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-  onNext: PropTypes.func.isRequired,
-  priority: PropTypes.number.isRequired,
 }
