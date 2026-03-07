@@ -127,13 +127,6 @@ export default function QuizCard({
             {wasLastCorrect ? '✓ Correct!' : '✗ Incorrect'}
           </p>
 
-          <button
-            onClick={onNext}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition-colors"
-          >
-            Next Question →
-          </button>
-
           {/* Reference */}
           {question.reference && (
             <div className="bg-slate-800 border border-slate-600 rounded-xl p-4">
@@ -141,6 +134,13 @@ export default function QuizCard({
               <p className="text-slate-300 text-sm leading-relaxed">{question.reference}</p>
             </div>
           )}
+
+          <button
+            onClick={onNext}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition-colors"
+          >
+            Next Question →
+          </button>
 
           {/* Ask Claude link */}
           <a
