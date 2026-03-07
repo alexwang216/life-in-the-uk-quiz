@@ -6,8 +6,7 @@ export default defineConfig({
   // WHY: GitHub Pages serves the site under /your-repo-name/, not /.
   // Without this, assets (JS, CSS, CSVs) will 404 because the browser
   // looks for them at the wrong path.
-  // Replace 'life-in-uk-quiz' with your actual GitHub repo name.
-  base: '/life-in-uk-quiz/',
+  base: '/life-in-the-uk-quiz/',
   plugins: [
     react(),
     VitePWA({
