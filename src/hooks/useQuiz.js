@@ -45,8 +45,8 @@ export function useQuiz() {
     async function init() {
       try {
         const [qRes, aRes] = await Promise.all([
-          fetch('/questions.csv'),
-          fetch('/answers.csv'),
+          fetch(import.meta.env.BASE_URL + 'questions.csv'),
+          fetch(import.meta.env.BASE_URL + 'answers.csv'),
         ])
         const [qText, aText] = await Promise.all([qRes.text(), aRes.text()])
 
