@@ -1,12 +1,18 @@
-import PropTypes from 'prop-types'
+import type { View } from '../types'
 
-const TABS = [
+interface Props {
+  view: View
+  setView: (v: View) => void
+  incorrectCount: number
+}
+
+const TABS: { id: View; label: string }[] = [
   { id: 'quiz', label: '🧠 Quiz' },
   { id: 'stats', label: '📊 Stats' },
   { id: 'review', label: '📝 Review' },
 ]
 
-export default function Navbar({ view, setView, incorrectCount }) {
+export default function Navbar({ view, setView, incorrectCount }: Props) {
   return (
     <nav className="w-full bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
       <div className="max-w-2xl mx-auto px-4 flex items-center justify-between h-14">
@@ -23,7 +29,6 @@ export default function Navbar({ view, setView, incorrectCount }) {
               }`}
             >
               {tab.label}
-              {/* Badge showing incorrect count on Review tab */}
               {tab.id === 'review' && incorrectCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {incorrectCount > 9 ? '9+' : incorrectCount}
@@ -35,10 +40,4 @@ export default function Navbar({ view, setView, incorrectCount }) {
       </div>
     </nav>
   )
-}
-
-Navbar.propTypes = {
-  view: PropTypes.string.isRequired,
-  setView: PropTypes.func.isRequired,
-  incorrectCount: PropTypes.number.isRequired,
 }
