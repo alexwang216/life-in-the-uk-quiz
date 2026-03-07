@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // WHY: GitHub Pages serves the site under /your-repo-name/, not /.
+  // Without this, assets (JS, CSS, CSVs) will 404 because the browser
+  // looks for them at the wrong path.
+  base: '/life-in-the-uk-quiz/',
   plugins: [
     react(),
     VitePWA({
