@@ -10,8 +10,9 @@ export interface Question {
   reference: string
   answers: Answer[]
   isMulti: boolean
-  isTrueFalse: boolean
+  isFixedOrder: boolean  // true for True/False and Yes/No — never shuffle these
   priority: number
+  attempted: boolean     // explicit flag, never conflated with priority value
 }
 
 export interface HistoryEntry {

@@ -6,11 +6,12 @@
 // Bumping STATE_VERSION forces a clean slate on next load instead of silently
 // using stale data. Always increment this when the saved state shape changes.
 const STORAGE_KEY = 'quiz_app_state'
-const STATE_VERSION = 2  // bump when SavedState shape changes
+const STATE_VERSION = 3  // bump when SavedState shape changes
 
 export interface SavedState {
   version: number
   priorities: Record<string, number>
+  attemptedIds: string[]
   answeredIds: string[]
   incorrectIds: string[]
   everIncorrectIds: string[]
