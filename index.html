@@ -4,9 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/life-in-the-uk-quiz/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>quiz-app</title>
-    <script type="module" crossorigin src="/life-in-the-uk-quiz/assets/index-Duh-iyiZ.js"></script>
-    <link rel="stylesheet" crossorigin href="/life-in-the-uk-quiz/assets/index-JYHQ6Udl.css">
+    <title>Life in the UK Quiz</title>
+    <script>
+      // Companion to public/404.html — restores the URL after the GitHub Pages
+      // SPA redirect so React Router sees the correct path.
+      (function() {
+        var p = window.location.search.match(/[?&]p=([^&]+)/);
+        if (p) {
+          var decoded = decodeURIComponent(p[1]);
+          window.history.replaceState(null, null, '/' + decoded);
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/life-in-the-uk-quiz/assets/index-Db6-t3zG.js"></script>
+    <link rel="stylesheet" crossorigin href="/life-in-the-uk-quiz/assets/index-DIdpYaFQ.css">
   <link rel="manifest" href="/life-in-the-uk-quiz/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/life-in-the-uk-quiz/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
