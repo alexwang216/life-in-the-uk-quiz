@@ -28,23 +28,38 @@ export function pickWeightedQuestion(
 
 /**
  * Priority system:
- *   Not attempted : 10  — new questions are shown often so you cover everything
- *   Correct       : -2  — backs off quickly once you know it (min 1)
- *   Incorrect     : +3  — ramps up faster so weak questions resurface more
+ *   Not attempted : 50  — WHY 50? With in-progress questions at 8 and easy at
+ *                         1–4, a gap of only 10 vs 8 barely changes the odds per
+ *                         question. At 50, one unattempted question outweighs
+ *                         ~6 in-progress ones, ensuring new material surfaces
+ *                         much more aggressively until everything is attempted.
+ *   Correct       : -2  (min 1)
+ *   Incorrect     : +3
  *
  * Badge thresholds:
- *   New         : priority === 10         (not attempted)
- *   In Progress : priority 5–10           (answered correctly 1–2 times: 10→8→6)
- *   Easy        : priority <= 4           (answered correctly 3+ times: 6→4)
+ *   New         : !attempted              (explicit flag, never derived from priority)
+ *   In Progress : priority 5–9            (answered correctly 1–2 times)
+ *   Easy        : priority <= 4           (answered correctly 3+ times)
  *   Review      : priority 13–15          (answered incorrectly once: 10+3=13)
- *   Hard        : priority >= 16          (answered incorrectly 2+ times: 13+3=16)
+ *   Hard        : priority >= 16          (answered incorrectly 2+ times)
+ *
+ * NOTE: thresholds are based on priority values AFTER the first answer,
+ * which always starts from 10 (the post-attempt baseline), not 50.
+ * PRIORITY_NOT_ATTEMPTED (50) is only ever the starting value — once
+ * attempted is set to true, priority is updated from 10 via updatePriority.
  */
-export const PRIORITY_INITIAL = 10
-export const THRESHOLD_IN_PROGRESS = 10   // 5–10: coming down from New, not Easy yet
+export const PRIORITY_NOT_ATTEMPTED = 50
+export const PRIORITY_FIRST_ATTEMPT = 10  // baseline priority on first answer
+export const THRESHOLD_IN_PROGRESS = 9
 export const THRESHOLD_EASY = 4
 export const THRESHOLD_HARD = 16
 
 export function updatePriority(current: number, isCorrect: boolean): number {
-  if (isCorrect) return Math.max(1, current - 2)
-  return current + 3
+  // WHY use PRIORITY_FIRST_ATTEMPT here?
+  // The starting priority is 50 (to surface new questions aggressively), but
+  // once answered, the question enters the normal 1–20 range. We don't want
+  // 50 - 2 = 48 on first correct — that would still look "New" in weight terms.
+  const base = current === PRIORITY_NOT_ATTEMPTED ? PRIORITY_FIRST_ATTEMPT : current
+  if (isCorrect) return Math.max(1, base - 2)
+  return base + 3
 }
