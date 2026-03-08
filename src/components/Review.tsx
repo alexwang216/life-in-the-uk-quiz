@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PRIORITY_NOT_ATTEMPTED } from '../utils/priority'
+import { PRIORITY_NOT_ATTEMPTED, THRESHOLD_IN_PROGRESS, THRESHOLD_EASY, THRESHOLD_HARD } from '../utils/priority'
 import type { Question, QuestionResult } from '../types'
 
 interface Props {
@@ -109,14 +109,16 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
 
                 <div className="mt-3">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    q.priority === PRIORITY_NOT_ATTEMPTED ? 'bg-slate-700 text-slate-300'
-                    : q.priority <= 2 ? 'bg-emerald-900 text-emerald-300'
-                    : q.priority <= 5 ? 'bg-amber-900 text-amber-300'
+                    q.priority === PRIORITY_NOT_ATTEMPTED  ? 'bg-slate-700 text-slate-300'
+                    : q.priority <= THRESHOLD_EASY         ? 'bg-emerald-900 text-emerald-300'
+                    : q.priority <= THRESHOLD_IN_PROGRESS  ? 'bg-blue-900 text-blue-300'
+                    : q.priority < THRESHOLD_HARD          ? 'bg-amber-900 text-amber-300'
                     : 'bg-red-900 text-red-300'
                   }`}>
-                    {q.priority === PRIORITY_NOT_ATTEMPTED ? '○ New'
-                      : q.priority <= 2 ? '🟢 Easy'
-                      : q.priority <= 5 ? '🟡 Review'
+                    {q.priority === PRIORITY_NOT_ATTEMPTED  ? '○ New'
+                      : q.priority <= THRESHOLD_EASY        ? '🟢 Easy'
+                      : q.priority <= THRESHOLD_IN_PROGRESS ? '🔵 In Progress'
+                      : q.priority < THRESHOLD_HARD         ? '🟡 Review'
                       : '🔴 Hard'}
                   </span>
                 </div>

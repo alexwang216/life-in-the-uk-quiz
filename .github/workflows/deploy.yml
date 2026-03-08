@@ -1,11 +1,9 @@
 name: Deploy to GitHub Pages
 
-# Runs whenever you push to the main branch
 on:
   push:
     branches: [main]
 
-# Needed so the action can write to your gh-pages branch
 permissions:
   contents: write
 
@@ -15,6 +13,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need the last 2 commits to read the latest commit message
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -24,6 +24,27 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Bump version based on conventional commit
+        # WHY: We read the latest commit message and decide how to bump:
+        #   feat:           → minor bump  (e.g. 1.0.0 → 1.1.0)  new feature
+        #   fix:            → patch bump  (e.g. 1.0.0 → 1.0.1)  bug fix
+        #   BREAKING CHANGE → major bump  (e.g. 1.0.0 → 2.0.0)  breaking change
+        #   anything else   → patch bump  (default)
+        # `npm version` updates package.json and creates a git tag, but we use
+        # --no-git-tag-version to skip the tag (keeps the workflow simple).
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          echo "Commit message: $MSG"
+          if echo "$MSG" | grep -qiE "^BREAKING CHANGE|BREAKING CHANGE:"; then
+            BUMP=major
+          elif echo "$MSG" | grep -qiE "^feat(\(.*\))?:"; then
+            BUMP=minor
+          else
+            BUMP=patch
+          fi
+          echo "Bumping: $BUMP"
+          npm version $BUMP --no-git-tag-version
 
       - name: Build
         run: npm run build
