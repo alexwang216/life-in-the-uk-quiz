@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { parseCSV } from '../utils/csvParser'
 import { loadState, saveState, clearState } from '../utils/storage'
-import { pickWeightedQuestion, updatePriority, PRIORITY_NOT_ATTEMPTED } from '../utils/priority'
+import { pickWeightedQuestion, updatePriority, PRIORITY_INITIAL } from '../utils/priority'
 import type { Question, Answer, HistoryEntry, QuestionResult } from '../types'
 
 export function useQuiz() {
@@ -52,11 +52,14 @@ export function useQuiz() {
             const answers = answerMap[key] ?? []
             if (answers.length === 0) return null
             const correctCount = answers.filter(a => a.is_correct).length
-            // WHY skip shuffle for True/False?
-            // Randomising True/False swaps the visual position of two options
-            // which is confusing — users expect True to come first always.
-            const isTrueFalse = answers.length === 2 &&
-              answers.every(a => ['true', 'false'].includes(a.answer.toLowerCase()))
+
+            // WHY isFixedOrder (not just isTrueFalse)?
+            // Yes/No questions have the same UX issue as True/False — shuffling
+            // swaps familiar positions and is confusing. Both types get fixed order.
+            const fixedOrderValues = ['true', 'false', 'yes', 'no']
+            const isFixedOrder = answers.length === 2 &&
+              answers.every(a => fixedOrderValues.includes(a.answer.toLowerCase()))
+
             return {
               id: q['globalId'],
               examKey: key,
@@ -64,8 +67,9 @@ export function useQuiz() {
               reference: q['reference'] ?? '',
               answers,
               isMulti: correctCount > 1,
-              isTrueFalse,
-              priority: PRIORITY_NOT_ATTEMPTED,
+              isFixedOrder,
+              priority: PRIORITY_INITIAL,
+              attempted: false,  // explicit flag — never derived from priority
             }
           })
           .filter((q): q is Question => q !== null)
@@ -74,6 +78,7 @@ export function useQuiz() {
         if (saved?.priorities) {
           built.forEach(q => {
             if (saved.priorities[q.id] != null) q.priority = saved.priorities[q.id]
+            if (saved.attemptedIds?.includes(q.id)) q.attempted = true
           })
           setAnsweredIds(new Set(saved.answeredIds ?? []))
           setIncorrectIds(new Set(saved.incorrectIds ?? []))
@@ -85,7 +90,7 @@ export function useQuiz() {
         setQuestions(built)
         const first = pickWeightedQuestion(built, null)
         setCurrentQuestion(first)
-        setShuffledAnswers(first ? (first.isTrueFalse ? first.answers : shuffle(first.answers)) : [])
+        setShuffledAnswers(first ? (first.isFixedOrder ? first.answers : shuffle(first.answers)) : [])
         setLoading(false)
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
@@ -101,8 +106,10 @@ export function useQuiz() {
       acc[q.id] = q.priority
       return acc
     }, {})
+    const attemptedIds = questions.filter(q => q.attempted).map(q => q.id)
     saveState({
       priorities,
+      attemptedIds,
       answeredIds: [...answeredIds],
       incorrectIds: [...incorrectIds],
       everIncorrectIds: [...everIncorrectIds],
@@ -143,7 +150,9 @@ export function useQuiz() {
 
     setQuestions(prev =>
       prev.map(q =>
-        q.id === question.id ? { ...q, priority: updatePriority(q.priority, wasCorrect) } : q
+        q.id === question.id
+          ? { ...q, priority: updatePriority(q.priority, wasCorrect), attempted: true }
+          : q
       )
     )
     setAnsweredIds(prev => new Set([...prev, question.id]))
@@ -173,7 +182,7 @@ export function useQuiz() {
     setQuestions(prev => {
       const next = pickWeightedQuestion(prev, currentQuestion?.id ?? null)
       setCurrentQuestion(next)
-      setShuffledAnswers(next ? (next.isTrueFalse ? next.answers : shuffle(next.answers)) : [])
+      setShuffledAnswers(next ? (next.isFixedOrder ? next.answers : shuffle(next.answers)) : [])
       return prev
     })
   }, [currentQuestion])
@@ -187,7 +196,7 @@ export function useQuiz() {
       const target = prev.find(q => q.id === questionId)
       if (target) {
         setCurrentQuestion(target)
-        setShuffledAnswers(target.isTrueFalse ? target.answers : shuffle(target.answers))
+        setShuffledAnswers(target.isFixedOrder ? target.answers : shuffle(target.answers))
       }
       return prev
     })
@@ -204,10 +213,10 @@ export function useQuiz() {
     setSelectedAnswers(new Set())
     setSubmitted(false)
     setQuestions(prev => {
-      const reset = prev.map(q => ({ ...q, priority: PRIORITY_NOT_ATTEMPTED }))
+      const reset = prev.map(q => ({ ...q, priority: PRIORITY_INITIAL, attempted: false }))
       const next = pickWeightedQuestion(reset, null)
       setCurrentQuestion(next)
-      setShuffledAnswers(next ? (next.isTrueFalse ? next.answers : shuffle(next.answers)) : [])
+      setShuffledAnswers(next ? (next.isFixedOrder ? next.answers : shuffle(next.answers)) : [])
       return reset
     })
   }, [])

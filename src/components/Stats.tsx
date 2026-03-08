@@ -1,3 +1,4 @@
+import { THRESHOLD_IN_PROGRESS, THRESHOLD_EASY, THRESHOLD_HARD } from '../utils/priority'
 import type { Question, HistoryEntry, QuestionResult } from '../types'
 import QuestionGrid from './QuestionGrid'
 
@@ -52,6 +53,9 @@ export default function Stats({ questions, answeredIds, incorrectIds, questionRe
 
       <QuestionGrid questions={questions} questionResults={questionResults} onJumpTo={onJumpTo} />
 
+      {/* Priority distribution — verifies weighted random is working */}
+      <PriorityDebugPanel questions={questions} />
+
       <button
         onClick={() => {
           if (window.confirm('Reset all progress? This cannot be undone.')) onReset()
@@ -78,4 +82,65 @@ function StatCard({ label, value, color }: StatCardProps) {
       <div className="text-xs opacity-70 uppercase tracking-wide">{label}</div>
     </div>
   )
+}
+
+function PriorityDebugPanel({ questions }: { questions: Question[] }) {
+  const groups = {
+    'New':         questions.filter(q => !q.attempted),
+    'In Progress': questions.filter(q => q.attempted && q.priority > THRESHOLD_EASY && q.priority <= THRESHOLD_IN_PROGRESS),
+    'Easy':        questions.filter(q => q.attempted && q.priority <= THRESHOLD_EASY),
+    'Review':      questions.filter(q => q.attempted && q.priority > THRESHOLD_IN_PROGRESS && q.priority < THRESHOLD_HARD),
+    'Hard':        questions.filter(q => q.attempted && q.priority >= THRESHOLD_HARD),
+  }
+
+  const totalWeight = questions.reduce((s, q) => s + q.priority, 0)
+
+  const rows: { label: string; count: number; weight: number; chance: string; colour: string }[] = [
+    { label: 'New',         ...calcGroup(groups['New'],         totalWeight), colour: 'text-slate-300' },
+    { label: 'In Progress', ...calcGroup(groups['In Progress'], totalWeight), colour: 'text-blue-300' },
+    { label: 'Easy',        ...calcGroup(groups['Easy'],        totalWeight), colour: 'text-emerald-300' },
+    { label: 'Review',      ...calcGroup(groups['Review'],      totalWeight), colour: 'text-amber-300' },
+    { label: 'Hard',        ...calcGroup(groups['Hard'],        totalWeight), colour: 'text-red-300' },
+  ]
+
+  return (
+    <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700">
+      <p className="text-white font-semibold mb-1">Priority Distribution</p>
+      <p className="text-slate-400 text-xs mb-4">
+        Shows how the weighted random picks questions. Higher priority = shown more often.
+      </p>
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-slate-500 uppercase tracking-wide">
+            <th className="text-left pb-2">Badge</th>
+            <th className="text-right pb-2">Count</th>
+            <th className="text-right pb-2">Total weight</th>
+            <th className="text-right pb-2">Chance per pick</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-700">
+          {rows.map(r => (
+            <tr key={r.label}>
+              <td className={`py-1.5 font-medium ${r.colour}`}>{r.label}</td>
+              <td className="text-right text-slate-300">{r.count}</td>
+              <td className="text-right text-slate-300">{r.weight}</td>
+              <td className="text-right text-slate-300">{r.chance}</td>
+            </tr>
+          ))}
+          <tr className="font-semibold">
+            <td className="pt-2 text-slate-300">Total</td>
+            <td className="pt-2 text-right text-slate-300">{questions.length}</td>
+            <td className="pt-2 text-right text-slate-300">{totalWeight}</td>
+            <td className="pt-2 text-right text-slate-300">100%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function calcGroup(qs: Question[], totalWeight: number) {
+  const weight = qs.reduce((s, q) => s + q.priority, 0)
+  const chance = totalWeight > 0 ? ((weight / totalWeight) * 100).toFixed(1) + '%' : '0%'
+  return { count: qs.length, weight, chance }
 }

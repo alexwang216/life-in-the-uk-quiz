@@ -1,4 +1,4 @@
-import { PRIORITY_NOT_ATTEMPTED, THRESHOLD_IN_PROGRESS, THRESHOLD_EASY, THRESHOLD_HARD } from '../utils/priority'
+import { THRESHOLD_IN_PROGRESS, THRESHOLD_EASY, THRESHOLD_HARD } from '../utils/priority'
 import type { Question, Answer } from '../types'
 
 interface Props {
@@ -46,14 +46,14 @@ export default function QuizCard({
         <div className="relative group">
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-default select-none ${
-              priority === PRIORITY_NOT_ATTEMPTED  ? 'bg-slate-700 text-slate-300'
-              : priority <= THRESHOLD_EASY         ? 'bg-emerald-900 text-emerald-300'
-              : priority <= THRESHOLD_IN_PROGRESS  ? 'bg-blue-900 text-blue-300'
-              : priority < THRESHOLD_HARD          ? 'bg-amber-900 text-amber-300'
+              !question.attempted              ? 'bg-slate-700 text-slate-300'
+              : priority <= THRESHOLD_EASY    ? 'bg-emerald-900 text-emerald-300'
+              : priority <= THRESHOLD_IN_PROGRESS ? 'bg-blue-900 text-blue-300'
+              : priority < THRESHOLD_HARD     ? 'bg-amber-900 text-amber-300'
               : 'bg-red-900 text-red-300'
             }`}
           >
-            {priority === PRIORITY_NOT_ATTEMPTED  ? '○ New'
+            {!question.attempted                  ? '○ New'
               : priority <= THRESHOLD_EASY        ? '🟢 Easy'
               : priority <= THRESHOLD_IN_PROGRESS ? '🔵 In Progress'
               : priority < THRESHOLD_HARD         ? '🟡 Review'
@@ -62,7 +62,7 @@ export default function QuizCard({
           <div className="absolute right-0 top-7 z-20 hidden group-hover:block min-w-max bg-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none">
             <p className="font-semibold mb-0.5">Priority: {priority}</p>
             <p className="text-slate-400">
-              {priority === PRIORITY_NOT_ATTEMPTED  ? 'Not attempted yet'
+              {!question.attempted                  ? 'Not attempted yet'
                 : priority <= THRESHOLD_EASY        ? 'You know this well — appears less often'
                 : priority <= THRESHOLD_IN_PROGRESS ? 'Getting there — keep answering correctly'
                 : priority < THRESHOLD_HARD         ? 'You have missed this — appears more often'
@@ -111,7 +111,7 @@ export default function QuizCard({
               <span className="text-slate-400 mr-3 text-sm">{String.fromCharCode(65 + i)}.</span>
               <span className="cap-first">{ans.answer}</span>
               {isMulti && !submitted && (
-                <span className={`float-right text-lg ${selectedAnswers.has(ans) ? 'text-indigo-400' : 'text-slate-600'}`}>
+                <span className={`cap-first float-right text-lg ${selectedAnswers.has(ans) ? 'text-indigo-400' : 'text-slate-600'}`}>
                   {selectedAnswers.has(ans) ? '☑' : '☐'}
                 </span>
               )}
