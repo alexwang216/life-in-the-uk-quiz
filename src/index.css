@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Capitalise only the first character of a sentence.
+   WHY not Tailwind's `capitalize`? That capitalises EVERY word, which is wrong
+   for sentences. This targets only the ::first-letter pseudo-element. */
+.cap-first::first-letter {
+  text-transform: uppercase;
+}

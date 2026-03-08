@@ -1,3 +1,4 @@
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import { useQuiz } from './hooks/useQuiz'
 import Navbar from './components/Navbar'
 import QuizCard from './components/QuizCard'
@@ -5,6 +6,8 @@ import Stats from './components/Stats'
 import Review from './components/Review'
 
 export default function App() {
+  const navigate = useNavigate()
+
   const {
     loading, error,
     currentQuestion, shuffledAnswers,
@@ -12,9 +15,17 @@ export default function App() {
     isAnswered, wasLastCorrect,
     questions, answeredIds, incorrectIds, questionResults,
     incorrectQuestions, everIncorrectQuestions, history,
-    view, setView,
     handleAnswer, handleSubmit, handleNext, handleJumpTo, handleReset,
   } = useQuiz()
+
+  // handleJumpTo sets the question in state; we then navigate to the quiz route.
+  // WHY keep navigation here and not in the hook?
+  // Hooks shouldn't know about routing — that's a UI concern. The hook just
+  // manages data; App decides where to send the user afterwards.
+  function jumpTo(id: string) {
+    handleJumpTo(id)
+    navigate('/')
+  }
 
   if (loading) {
     return (
@@ -37,44 +48,55 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      <Navbar view={view} setView={setView} incorrectCount={incorrectIds.size} />
+      <Navbar incorrectCount={incorrectIds.size} />
       <main className="max-w-2xl mx-auto px-4 py-8">
-        {view === 'quiz' && currentQuestion && (
-          <QuizCard
-            question={currentQuestion}
-            shuffledAnswers={shuffledAnswers}
-            selectedAnswer={selectedAnswer}
-            selectedAnswers={selectedAnswers}
-            submitted={submitted}
-            isAnswered={isAnswered}
-            wasLastCorrect={wasLastCorrect}
-            onAnswer={handleAnswer}
-            onSubmit={handleSubmit}
-            onNext={handleNext}
-            priority={currentQuestion.priority}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              currentQuestion ? (
+                <QuizCard
+                  question={currentQuestion}
+                  shuffledAnswers={shuffledAnswers}
+                  selectedAnswer={selectedAnswer}
+                  selectedAnswers={selectedAnswers}
+                  submitted={submitted}
+                  isAnswered={isAnswered}
+                  wasLastCorrect={wasLastCorrect}
+                  onAnswer={handleAnswer}
+                  onSubmit={handleSubmit}
+                  onNext={handleNext}
+                  priority={currentQuestion.priority}
+                />
+              ) : null
+            }
           />
-        )}
-
-        {view === 'stats' && (
-          <Stats
-            questions={questions}
-            answeredIds={answeredIds}
-            incorrectIds={incorrectIds}
-            questionResults={questionResults}
-            history={history}
-            onReset={() => { handleReset(); setView('quiz') }}
-            onJumpTo={handleJumpTo}
+          <Route
+            path="/stats"
+            element={
+              <Stats
+                questions={questions}
+                answeredIds={answeredIds}
+                incorrectIds={incorrectIds}
+                questionResults={questionResults}
+                history={history}
+                onReset={() => { handleReset(); navigate('/') }}
+                onJumpTo={jumpTo}
+              />
+            }
           />
-        )}
-
-        {view === 'review' && (
-          <Review
-            incorrectQuestions={incorrectQuestions}
-            everIncorrectQuestions={everIncorrectQuestions}
-            questionResults={questionResults}
-            onJumpTo={handleJumpTo}
+          <Route
+            path="/review"
+            element={
+              <Review
+                incorrectQuestions={incorrectQuestions}
+                everIncorrectQuestions={everIncorrectQuestions}
+                questionResults={questionResults}
+                onJumpTo={jumpTo}
+              />
+            }
           />
-        )}
+        </Routes>
       </main>
     </div>
   )

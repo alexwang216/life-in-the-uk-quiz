@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { parseCSV } from '../utils/csvParser'
 import { loadState, saveState, clearState } from '../utils/storage'
-import { pickWeightedQuestion, updatePriority } from '../utils/priority'
-import type { Question, Answer, HistoryEntry, QuestionResult, View } from '../types'
+import { pickWeightedQuestion, updatePriority, PRIORITY_NOT_ATTEMPTED } from '../utils/priority'
+import type { Question, Answer, HistoryEntry, QuestionResult } from '../types'
 
 export function useQuiz() {
   const [loading, setLoading] = useState(true)
@@ -22,7 +22,6 @@ export function useQuiz() {
   const [everIncorrectIds, setEverIncorrectIds] = useState<Set<string>>(new Set())
   const [questionResults, setQuestionResults] = useState<Record<string, QuestionResult>>({})
   const [history, setHistory] = useState<HistoryEntry[]>([])
-  const [view, setView] = useState<View>('quiz')
 
   useEffect(() => {
     async function init() {
@@ -53,6 +52,11 @@ export function useQuiz() {
             const answers = answerMap[key] ?? []
             if (answers.length === 0) return null
             const correctCount = answers.filter(a => a.is_correct).length
+            // WHY skip shuffle for True/False?
+            // Randomising True/False swaps the visual position of two options
+            // which is confusing — users expect True to come first always.
+            const isTrueFalse = answers.length === 2 &&
+              answers.every(a => ['true', 'false'].includes(a.answer.toLowerCase()))
             return {
               id: q['globalId'],
               examKey: key,
@@ -60,7 +64,8 @@ export function useQuiz() {
               reference: q['reference'] ?? '',
               answers,
               isMulti: correctCount > 1,
-              priority: 1,
+              isTrueFalse,
+              priority: PRIORITY_NOT_ATTEMPTED,
             }
           })
           .filter((q): q is Question => q !== null)
@@ -80,7 +85,7 @@ export function useQuiz() {
         setQuestions(built)
         const first = pickWeightedQuestion(built, null)
         setCurrentQuestion(first)
-        setShuffledAnswers(first ? shuffle(first.answers) : [])
+        setShuffledAnswers(first ? (first.isTrueFalse ? first.answers : shuffle(first.answers)) : [])
         setLoading(false)
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
@@ -168,11 +173,12 @@ export function useQuiz() {
     setQuestions(prev => {
       const next = pickWeightedQuestion(prev, currentQuestion?.id ?? null)
       setCurrentQuestion(next)
-      setShuffledAnswers(next ? shuffle(next.answers) : [])
+      setShuffledAnswers(next ? (next.isTrueFalse ? next.answers : shuffle(next.answers)) : [])
       return prev
     })
   }, [currentQuestion])
 
+  // handleJumpTo sets the target question; the caller navigates to '/' via the router.
   const handleJumpTo = useCallback((questionId: string) => {
     setSelectedAnswer(null)
     setSelectedAnswers(new Set())
@@ -181,11 +187,10 @@ export function useQuiz() {
       const target = prev.find(q => q.id === questionId)
       if (target) {
         setCurrentQuestion(target)
-        setShuffledAnswers(shuffle(target.answers))
+        setShuffledAnswers(target.isTrueFalse ? target.answers : shuffle(target.answers))
       }
       return prev
     })
-    setView('quiz')
   }, [])
 
   const handleReset = useCallback(() => {
@@ -199,10 +204,10 @@ export function useQuiz() {
     setSelectedAnswers(new Set())
     setSubmitted(false)
     setQuestions(prev => {
-      const reset = prev.map(q => ({ ...q, priority: 1 }))
+      const reset = prev.map(q => ({ ...q, priority: PRIORITY_NOT_ATTEMPTED }))
       const next = pickWeightedQuestion(reset, null)
       setCurrentQuestion(next)
-      setShuffledAnswers(next ? shuffle(next.answers) : [])
+      setShuffledAnswers(next ? (next.isTrueFalse ? next.answers : shuffle(next.answers)) : [])
       return reset
     })
   }, [])
@@ -233,7 +238,6 @@ export function useQuiz() {
     isAnswered, wasLastCorrect,
     questions, answeredIds, incorrectIds, everIncorrectIds, questionResults,
     incorrectQuestions, everIncorrectQuestions, history,
-    view, setView,
     handleAnswer, handleSubmit, handleNext, handleJumpTo, handleReset,
   }
 }

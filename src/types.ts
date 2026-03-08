@@ -10,6 +10,7 @@ export interface Question {
   reference: string
   answers: Answer[]
   isMulti: boolean
+  isTrueFalse: boolean
   priority: number
 }
 
@@ -19,4 +20,3 @@ export interface HistoryEntry {
 }
 
 export type QuestionResult = 'correct' | 'incorrect'
-export type View = 'quiz' | 'stats' | 'review'

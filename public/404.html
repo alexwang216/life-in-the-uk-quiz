@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Life in the UK Quiz</title>
+    <script>
+      // GitHub Pages SPA redirect trick.
+      // WHY: GitHub Pages serves static files only. If a user visits
+      // /life-in-the-uk-quiz/stats directly or refreshes the page, GitHub
+      // looks for a file at that path, finds nothing, and returns its own 404.
+      // This 404.html intercepts that, encodes the intended path into the
+      // query string, and redirects to the root index.html. The index.html
+      // then reads the query string and restores the original URL so React
+      // Router can handle it correctly.
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 2).join('/') +
+        '/?p=' + encodeURIComponent(l.pathname.slice(1) + l.search) +
+        (l.hash || '')
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
