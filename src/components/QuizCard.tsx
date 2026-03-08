@@ -111,7 +111,7 @@ export default function QuizCard({
               <span className="text-slate-400 mr-3 text-sm">{String.fromCharCode(65 + i)}.</span>
               <span className="cap-first">{ans.answer}</span>
               {isMulti && !submitted && (
-                <span className={`cap-first float-right text-lg ${selectedAnswers.has(ans) ? 'text-indigo-400' : 'text-slate-600'}`}>
+                <span className={`float-right text-lg ${selectedAnswers.has(ans) ? 'text-indigo-400' : 'text-slate-600'}`}>
                   {selectedAnswers.has(ans) ? '☑' : '☐'}
                 </span>
               )}

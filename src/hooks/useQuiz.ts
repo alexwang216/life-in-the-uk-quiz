@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { parseCSV } from '../utils/csvParser'
 import { loadState, saveState, clearState } from '../utils/storage'
-import { pickWeightedQuestion, updatePriority, PRIORITY_INITIAL } from '../utils/priority'
+import { pickWeightedQuestion, updatePriority, PRIORITY_NOT_ATTEMPTED } from '../utils/priority'
 import type { Question, Answer, HistoryEntry, QuestionResult } from '../types'
 
 export function useQuiz() {
@@ -53,6 +53,15 @@ export function useQuiz() {
             if (answers.length === 0) return null
             const correctCount = answers.filter(a => a.is_correct).length
 
+            // Capitalise every answer's first letter in JS rather than CSS.
+            // WHY: CSS ::first-letter only works on block elements. Answer spans
+            // are inline inside buttons, so the pseudo-element has no effect,
+            // causing "yes", "no", "true", "false" to stay lowercase.
+            const capitalisedAnswers = answers.map(a => ({
+              ...a,
+              answer: a.answer.charAt(0).toUpperCase() + a.answer.slice(1),
+            }))
+
             // WHY isFixedOrder (not just isTrueFalse)?
             // Yes/No questions have the same UX issue as True/False — shuffling
             // swaps familiar positions and is confusing. Both types get fixed order.
@@ -65,10 +74,10 @@ export function useQuiz() {
               examKey: key,
               question: q['question'],
               reference: q['reference'] ?? '',
-              answers,
+              answers: capitalisedAnswers,
               isMulti: correctCount > 1,
               isFixedOrder,
-              priority: PRIORITY_INITIAL,
+              priority: PRIORITY_NOT_ATTEMPTED,
               attempted: false,  // explicit flag — never derived from priority
             }
           })
@@ -117,6 +126,18 @@ export function useQuiz() {
       history,
     })
   }, [questions, answeredIds, incorrectIds, everIncorrectIds, questionResults, history])
+
+  // WHY a ref here?
+  // _resolveAnswer calls setQuestions (async), then handleNext also calls
+  // setQuestions to read the latest state. But React batches state updates,
+  // so when handleNext runs, `questions` in its closure may still be the
+  // pre-answer version. Storing the latest questions in a ref gives handleNext
+  // synchronous access to the most up-to-date array.
+  const questionsRef = useRef<Question[]>([])
+
+  useEffect(() => {
+    questionsRef.current = questions
+  }, [questions])
 
   const handleAnswer = useCallback((answer: Answer) => {
     if (!currentQuestion) return
@@ -179,12 +200,10 @@ export function useQuiz() {
     setSelectedAnswer(null)
     setSelectedAnswers(new Set())
     setSubmitted(false)
-    setQuestions(prev => {
-      const next = pickWeightedQuestion(prev, currentQuestion?.id ?? null)
-      setCurrentQuestion(next)
-      setShuffledAnswers(next ? (next.isFixedOrder ? next.answers : shuffle(next.answers)) : [])
-      return prev
-    })
+    const latest = questionsRef.current
+    const next = pickWeightedQuestion(latest, currentQuestion?.id ?? null)
+    setCurrentQuestion(next)
+    setShuffledAnswers(next ? (next.isFixedOrder ? next.answers : shuffle(next.answers)) : [])
   }, [currentQuestion])
 
   // handleJumpTo sets the target question; the caller navigates to '/' via the router.
@@ -213,7 +232,7 @@ export function useQuiz() {
     setSelectedAnswers(new Set())
     setSubmitted(false)
     setQuestions(prev => {
-      const reset = prev.map(q => ({ ...q, priority: PRIORITY_INITIAL, attempted: false }))
+      const reset = prev.map(q => ({ ...q, priority: PRIORITY_NOT_ATTEMPTED, attempted: false }))
       const next = pickWeightedQuestion(reset, null)
       setCurrentQuestion(next)
       setShuffledAnswers(next ? (next.isFixedOrder ? next.answers : shuffle(next.answers)) : [])
