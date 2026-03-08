@@ -1,3 +1,4 @@
+import { PRIORITY_NOT_ATTEMPTED } from '../utils/priority'
 import type { Question, Answer } from '../types'
 
 interface Props {
@@ -44,23 +45,28 @@ export default function QuizCard({
         </div>
         <span
           className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-            priority <= 1 ? 'bg-emerald-900 text-emerald-300'
-            : priority <= 3 ? 'bg-amber-900 text-amber-300'
+            priority === PRIORITY_NOT_ATTEMPTED ? 'bg-slate-700 text-slate-300'
+            : priority <= 2 ? 'bg-emerald-900 text-emerald-300'
+            : priority <= 5 ? 'bg-amber-900 text-amber-300'
             : 'bg-red-900 text-red-300'
           }`}
           title={
-            priority <= 1 ? 'You know this well — appears less often'
-            : priority <= 3 ? 'You have missed this — appears more often'
+            priority === PRIORITY_NOT_ATTEMPTED ? 'Not attempted yet'
+            : priority <= 2 ? 'You know this well — appears less often'
+            : priority <= 5 ? 'You have missed this — appears more often'
             : 'You keep missing this — appears frequently'
           }
         >
-          {priority <= 1 ? '🟢 Easy' : priority <= 3 ? '🟡 Review' : '🔴 Hard'}
+          {priority === PRIORITY_NOT_ATTEMPTED ? '○ New'
+            : priority <= 2 ? '🟢 Easy'
+            : priority <= 5 ? '🟡 Review'
+            : '🔴 Hard'}
         </span>
       </div>
 
       {/* Question */}
       <div className="bg-slate-800 rounded-2xl p-6 mb-6 shadow-lg border border-slate-700">
-        <p className="text-white text-lg font-medium leading-relaxed">{question.question}</p>
+        <p className="cap-first text-white text-lg font-medium leading-relaxed">{question.question}</p>
       </div>
 
       {/* Answer choices */}
@@ -95,7 +101,7 @@ export default function QuizCard({
               className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 font-medium cursor-pointer disabled:cursor-default ${style}`}
             >
               <span className="text-slate-400 mr-3 text-sm">{String.fromCharCode(65 + i)}.</span>
-              {ans.answer}
+              <span className="cap-first">{ans.answer}</span>
               {isMulti && !submitted && (
                 <span className={`float-right text-lg ${selectedAnswers.has(ans) ? 'text-indigo-400' : 'text-slate-600'}`}>
                   {selectedAnswers.has(ans) ? '☑' : '☐'}
@@ -141,7 +147,7 @@ export default function QuizCard({
           {question.reference && (
             <div className="bg-slate-800 border border-slate-600 rounded-xl p-4">
               <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">📖 Reference</p>
-              <p className="text-slate-300 text-sm leading-relaxed">{question.reference}</p>
+              <p className="cap-first text-slate-300 text-sm leading-relaxed">{question.reference}</p>
             </div>
           )}
 
