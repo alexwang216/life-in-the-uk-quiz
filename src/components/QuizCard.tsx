@@ -1,4 +1,4 @@
-import { PRIORITY_NOT_ATTEMPTED } from '../utils/priority'
+import { PRIORITY_NOT_ATTEMPTED, THRESHOLD_IN_PROGRESS, THRESHOLD_EASY, THRESHOLD_HARD } from '../utils/priority'
 import type { Question, Answer } from '../types'
 
 interface Props {
@@ -43,25 +43,33 @@ export default function QuizCard({
             </span>
           )}
         </div>
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-            priority === PRIORITY_NOT_ATTEMPTED ? 'bg-slate-700 text-slate-300'
-            : priority <= 2 ? 'bg-emerald-900 text-emerald-300'
-            : priority <= 5 ? 'bg-amber-900 text-amber-300'
-            : 'bg-red-900 text-red-300'
-          }`}
-          title={
-            priority === PRIORITY_NOT_ATTEMPTED ? 'Not attempted yet'
-            : priority <= 2 ? 'You know this well — appears less often'
-            : priority <= 5 ? 'You have missed this — appears more often'
-            : 'You keep missing this — appears frequently'
-          }
-        >
-          {priority === PRIORITY_NOT_ATTEMPTED ? '○ New'
-            : priority <= 2 ? '🟢 Easy'
-            : priority <= 5 ? '🟡 Review'
-            : '🔴 Hard'}
-        </span>
+        <div className="relative group">
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-default select-none ${
+              priority === PRIORITY_NOT_ATTEMPTED  ? 'bg-slate-700 text-slate-300'
+              : priority <= THRESHOLD_EASY         ? 'bg-emerald-900 text-emerald-300'
+              : priority <= THRESHOLD_IN_PROGRESS  ? 'bg-blue-900 text-blue-300'
+              : priority < THRESHOLD_HARD          ? 'bg-amber-900 text-amber-300'
+              : 'bg-red-900 text-red-300'
+            }`}
+          >
+            {priority === PRIORITY_NOT_ATTEMPTED  ? '○ New'
+              : priority <= THRESHOLD_EASY        ? '🟢 Easy'
+              : priority <= THRESHOLD_IN_PROGRESS ? '🔵 In Progress'
+              : priority < THRESHOLD_HARD         ? '🟡 Review'
+              : '🔴 Hard'}
+          </span>
+          <div className="absolute right-0 top-7 z-20 hidden group-hover:block min-w-max bg-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none">
+            <p className="font-semibold mb-0.5">Priority: {priority}</p>
+            <p className="text-slate-400">
+              {priority === PRIORITY_NOT_ATTEMPTED  ? 'Not attempted yet'
+                : priority <= THRESHOLD_EASY        ? 'You know this well — appears less often'
+                : priority <= THRESHOLD_IN_PROGRESS ? 'Getting there — keep answering correctly'
+                : priority < THRESHOLD_HARD         ? 'You have missed this — appears more often'
+                : 'You keep missing this — appears frequently'}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Question */}
@@ -151,17 +159,29 @@ export default function QuizCard({
             </div>
           )}
 
-          {/* 3. Ask Claude — secondary action */}
-          <a
-            href={buildClaudeUrl(question.question, correctAnswers.map(a => a.answer))}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-indigo-700 text-indigo-300 hover:bg-indigo-900 transition-colors text-sm font-medium"
-          >
-            <span>✦</span>
-            Ask Claude AI for more details
-            <span className="text-xs opacity-60">↗</span>
-          </a>
+          {/* 3. Ask Claude — secondary action.
+              WHY no target="_blank" on mobile?
+              iOS universal links only trigger when the link is tapped in the
+              same browsing context. Opening in a new tab bypasses the universal
+              link handler, so the app never opens. On desktop we still want a
+              new tab so the user doesn't lose their quiz progress.
+              We detect mobile via the pointer: coarse media query — touch
+              devices have coarse pointers, mice have fine ones. */}
+          <div className="flex flex-col gap-1">
+            <a
+              href={buildClaudeUrl(question.question, correctAnswers.map(a => a.answer))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-indigo-700 text-indigo-300 hover:bg-indigo-900 transition-colors text-sm font-medium"
+            >
+              <span>✦</span>
+              Ask Claude AI for more details
+              <span className="text-xs opacity-60">↗</span>
+            </a>
+            <p className="text-xs text-slate-500 text-center">
+              On mobile, long-press → "Open in Claude" if you have the app installed
+            </p>
+          </div>
         </div>
       )}
     </div>

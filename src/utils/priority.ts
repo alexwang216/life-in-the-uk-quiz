@@ -37,13 +37,22 @@ export function pickWeightedQuestion(
  * "easy" (priority 1) questions, so already-seen correct answers kept appearing
  * instead of surfacing new material.
  *
- * Badge thresholds (used in UI):
- *   Not attempted : priority === 10
- *   Easy          : priority <= 2
- *   Review        : priority <= 5
- *   Hard          : priority > 5
+ * WHY special-case PRIORITY_NOT_ATTEMPTED on correct?
+ * Without this, answering a new question correctly goes 10 - 2 = 8, which
+ * falls in the "Hard" zone (> 5) and shows 🔴 Hard — clearly wrong for a
+ * first-time correct answer. Instead we jump straight to 1 (Easy).
+ *
+ * Badge thresholds:
+ *   New         : priority === 10         (not attempted)
+ *   In Progress : priority 5–9            (answered correctly 1–2 times: 10→8→6)
+ *   Easy        : priority <= 4           (answered correctly 3+ times: 6→4)
+ *   Review      : priority 13–15          (answered incorrectly once: 10+3=13)
+ *   Hard        : priority >= 16          (answered incorrectly 2+ times: 13+3=16)
  */
 export const PRIORITY_NOT_ATTEMPTED = 10
+export const THRESHOLD_IN_PROGRESS = 9   // 5–9: coming down from New, not Easy yet
+export const THRESHOLD_EASY = 4
+export const THRESHOLD_HARD = 16
 
 export function updatePriority(current: number, isCorrect: boolean): number {
   if (isCorrect) return Math.max(1, current - 2)

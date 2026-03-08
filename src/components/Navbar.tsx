@@ -14,7 +14,10 @@ export default function Navbar({ incorrectCount }: Props) {
   return (
     <nav className="w-full bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
       <div className="max-w-2xl mx-auto px-4 flex items-center justify-between h-14">
-        <span className="text-white font-bold text-lg tracking-tight">QuizApp</span>
+        <div className="flex items-center gap-2">
+          <span className="text-white font-bold text-lg tracking-tight">QuizApp</span>
+          <span className="text-slate-500 text-xs font-mono">v{__APP_VERSION__}</span>
+        </div>
         <div className="flex gap-1">
           {TABS.map(tab => (
             <NavLink
