@@ -13,9 +13,9 @@ export default function App() {
     currentQuestion, shuffledAnswers,
     selectedAnswer, selectedAnswers, submitted,
     isAnswered, wasLastCorrect,
-    questions, answeredIds, incorrectIds, questionResults,
-    incorrectQuestions, everIncorrectQuestions, history,
-    handleAnswer, handleSubmit, handleNext, handleJumpTo, handleReset,
+    questions, answeredIds, incorrectIds, markedForReviewIds, questionResults,
+    incorrectQuestions, everIncorrectQuestions, markedQuestions, history,
+    handleAnswer, handleSubmit, handleNext, handleJumpTo, handleReset, handleToggleReview,
   } = useQuiz()
 
   // handleJumpTo sets the question in state; we then navigate to the quiz route.
@@ -63,9 +63,12 @@ export default function App() {
                   submitted={submitted}
                   isAnswered={isAnswered}
                   wasLastCorrect={wasLastCorrect}
+                  isMarked={markedForReviewIds.has(currentQuestion.id)}
                   onAnswer={handleAnswer}
                   onSubmit={handleSubmit}
                   onNext={handleNext}
+                  onReview={() => navigate('/review')}
+                  onToggleReview={() => handleToggleReview(currentQuestion.id)}
                   priority={currentQuestion.priority}
                 />
               ) : null
@@ -91,8 +94,10 @@ export default function App() {
               <Review
                 incorrectQuestions={incorrectQuestions}
                 everIncorrectQuestions={everIncorrectQuestions}
+                markedQuestions={markedQuestions}
                 questionResults={questionResults}
                 onJumpTo={jumpTo}
+                onUnmark={(id) => handleToggleReview(id)}
               />
             }
           />

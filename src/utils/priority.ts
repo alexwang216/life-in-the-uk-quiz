@@ -48,7 +48,7 @@ export function pickWeightedQuestion(
  * PRIORITY_NOT_ATTEMPTED (50) is only ever the starting value — once
  * attempted is set to true, priority is updated from 10 via updatePriority.
  */
-export const PRIORITY_NOT_ATTEMPTED = 50
+export const PRIORITY_NOT_ATTEMPTED = 200
 export const PRIORITY_FIRST_ATTEMPT = 10  // baseline priority on first answer
 export const THRESHOLD_IN_PROGRESS = 9
 export const THRESHOLD_EASY = 4

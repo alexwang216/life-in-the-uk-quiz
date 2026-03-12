@@ -20,6 +20,7 @@ export function useQuiz() {
   // everIncorrectIds: questions you've ever got wrong — never removed even if later corrected.
   // Lets users re-test "lucky guesses" from the Ever Missed tab.
   const [everIncorrectIds, setEverIncorrectIds] = useState<Set<string>>(new Set())
+  const [markedForReviewIds, setMarkedForReviewIds] = useState<Set<string>>(new Set())
   const [questionResults, setQuestionResults] = useState<Record<string, QuestionResult>>({})
   const [history, setHistory] = useState<HistoryEntry[]>([])
 
@@ -92,6 +93,7 @@ export function useQuiz() {
           setAnsweredIds(new Set(saved.answeredIds ?? []))
           setIncorrectIds(new Set(saved.incorrectIds ?? []))
           setEverIncorrectIds(new Set(saved.everIncorrectIds ?? []))
+          setMarkedForReviewIds(new Set(saved.markedForReviewIds ?? []))
           setQuestionResults(saved.questionResults ?? {})
           setHistory(saved.history ?? [])
         }
@@ -122,10 +124,11 @@ export function useQuiz() {
       answeredIds: [...answeredIds],
       incorrectIds: [...incorrectIds],
       everIncorrectIds: [...everIncorrectIds],
+      markedForReviewIds: [...markedForReviewIds],
       questionResults,
       history,
     })
-  }, [questions, answeredIds, incorrectIds, everIncorrectIds, questionResults, history])
+  }, [questions, answeredIds, incorrectIds, everIncorrectIds, markedForReviewIds, questionResults, history])
 
   // WHY a ref here?
   // _resolveAnswer calls setQuestions (async), then handleNext also calls
@@ -226,6 +229,7 @@ export function useQuiz() {
     setAnsweredIds(new Set())
     setIncorrectIds(new Set())
     setEverIncorrectIds(new Set())
+    setMarkedForReviewIds(new Set())
     setQuestionResults({})
     setHistory([])
     setSelectedAnswer(null)
@@ -240,8 +244,18 @@ export function useQuiz() {
     })
   }, [])
 
+  const handleToggleReview = useCallback((questionId: string) => {
+    setMarkedForReviewIds(prev => {
+      const next = new Set(prev)
+      if (next.has(questionId)) next.delete(questionId)
+      else next.add(questionId)
+      return next
+    })
+  }, [])
+
   const incorrectQuestions = questions.filter(q => incorrectIds.has(q.id))
   const everIncorrectQuestions = questions.filter(q => everIncorrectIds.has(q.id))
+  const markedQuestions = questions.filter(q => markedForReviewIds.has(q.id))
 
   const isAnswered = currentQuestion
     ? currentQuestion.isMulti ? submitted : selectedAnswer !== null
@@ -264,9 +278,9 @@ export function useQuiz() {
     currentQuestion, shuffledAnswers,
     selectedAnswer, selectedAnswers, submitted,
     isAnswered, wasLastCorrect,
-    questions, answeredIds, incorrectIds, everIncorrectIds, questionResults,
-    incorrectQuestions, everIncorrectQuestions, history,
-    handleAnswer, handleSubmit, handleNext, handleJumpTo, handleReset,
+    questions, answeredIds, incorrectIds, everIncorrectIds, markedForReviewIds, questionResults,
+    incorrectQuestions, everIncorrectQuestions, markedQuestions, history,
+    handleAnswer, handleSubmit, handleNext, handleJumpTo, handleReset, handleToggleReview,
   }
 }
 

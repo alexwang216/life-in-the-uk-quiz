@@ -1615,7 +1615,19 @@ examNumber,questionNumber,answerNumber,answer,isCorrect
 18,26,4,George II,
 18,27,1,yes,yes
 18,27,2,no,
-,,,,
-,,,,
-,,,,
-,,,,
+18,28,1,Sheriff Court,yes
+18,28,2,Crown Court,
+18,28,3,High Court of Justiciary,
+18,28,4,Justice of the Peace Court,
+18,29,1,January or February,
+18,29,2,March or April,
+18,29,3,October or November,yes
+18,29,4,December or January,
+18,30,1,52,
+18,30,2,54,yes
+18,30,3,56,
+18,30,4,72,
+18,31,1,1982,
+18,31,2,1996,
+18,31,3,2000,yes
+18,31,4,2024,

@@ -5,20 +5,29 @@ import type { Question, QuestionResult } from '../types'
 interface Props {
   incorrectQuestions: Question[]
   everIncorrectQuestions: Question[]
+  markedQuestions: Question[]
   questionResults: Record<string, QuestionResult>
   onJumpTo: (id: string) => void
+  onUnmark: (id: string) => void
 }
 
-type Tab = 'current' | 'ever'
+type Tab = 'current' | 'ever' | 'marked'
 
-export default function Review({ incorrectQuestions, everIncorrectQuestions, questionResults, onJumpTo }: Props) {
+export default function Review({
+  incorrectQuestions, everIncorrectQuestions, markedQuestions,
+  questionResults, onJumpTo, onUnmark,
+}: Props) {
   const [tab, setTab] = useState<Tab>('current')
 
-  const list = tab === 'current' ? incorrectQuestions : everIncorrectQuestions
+  const list =
+    tab === 'current' ? incorrectQuestions
+    : tab === 'ever'  ? everIncorrectQuestions
+    : markedQuestions
 
-  const emptyMsg = tab === 'current'
-    ? { icon: '🎉', title: 'No current mistakes!', sub: 'Questions you get wrong will appear here. Clear them by answering correctly.' }
-    : { icon: '📭', title: 'No history yet', sub: "Questions you've ever answered incorrectly will appear here — even if you later got them right." }
+  const emptyMsg =
+    tab === 'current' ? { icon: '🎉', title: 'No current mistakes!',   sub: 'Questions you get wrong will appear here. Clear them by answering correctly.' }
+    : tab === 'ever'  ? { icon: '📭', title: 'No history yet',          sub: "Questions you've ever answered incorrectly will appear here — even if you later got them right." }
+    :                   { icon: '☆',  title: 'No marked questions yet', sub: 'After answering a question, tap "Mark for Review" to bookmark it here.' }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -28,24 +37,9 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
       </p>
 
       <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => setTab('current')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
-            tab === 'current' ? 'bg-red-700 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-          }`}
-        >
-          Still Incorrect
-          <span className="ml-2 text-xs opacity-70">({incorrectQuestions.length})</span>
-        </button>
-        <button
-          onClick={() => setTab('ever')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
-            tab === 'ever' ? 'bg-amber-700 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-          }`}
-        >
-          Ever Missed
-          <span className="ml-2 text-xs opacity-70">({everIncorrectQuestions.length})</span>
-        </button>
+        <TabButton active={tab === 'current'} colour="red"    onClick={() => setTab('current')} label="Still Incorrect" count={incorrectQuestions.length} />
+        <TabButton active={tab === 'ever'}    colour="amber"  onClick={() => setTab('ever')}    label="Ever Missed"     count={everIncorrectQuestions.length} />
+        <TabButton active={tab === 'marked'}  colour="yellow" onClick={() => setTab('marked')}  label="Marked"          count={markedQuestions.length} />
       </div>
 
       {list.length === 0 ? (
@@ -64,30 +58,38 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
             return (
               <div
                 key={q.id}
-                className={`bg-slate-800 border rounded-xl p-5 ${laterCorrected ? 'border-emerald-700' : 'border-slate-700'}`}
+                className={`bg-slate-800 border rounded-xl p-5 ${
+                  laterCorrected     ? 'border-emerald-700'
+                  : tab === 'marked' ? 'border-yellow-700'
+                  : 'border-slate-700'
+                }`}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded">
-                      Q#{q.id}
-                    </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded">Q#{q.id}</span>
                     {laterCorrected && (
-                      <span className="text-xs bg-emerald-900 text-emerald-300 px-2 py-0.5 rounded-full">
-                        ✓ Later corrected
-                      </span>
+                      <span className="text-xs bg-emerald-900 text-emerald-300 px-2 py-0.5 rounded-full">✓ Later corrected</span>
                     )}
                     {q.isMulti && (
-                      <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full">
-                        Multi-answer
-                      </span>
+                      <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full">Multi-answer</span>
                     )}
                   </div>
-                  <button
-                    onClick={() => onJumpTo(q.id)}
-                    className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1 rounded-lg transition-colors font-medium"
-                  >
-                    Jump →
-                  </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {tab === 'marked' && (
+                      <button
+                        onClick={() => onUnmark(q.id)}
+                        className="text-xs bg-yellow-800 hover:bg-yellow-700 text-yellow-200 px-3 py-1 rounded-lg transition-colors font-medium"
+                      >
+                        ★ Unmark
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onJumpTo(q.id)}
+                      className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1 rounded-lg transition-colors font-medium"
+                    >
+                      Jump →
+                    </button>
+                  </div>
                 </div>
 
                 <p className="text-white font-medium mb-3 leading-relaxed">{q.question}</p>
@@ -102,23 +104,21 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
                 </div>
 
                 {q.reference && (
-                  <p className="text-slate-500 text-xs mt-2 leading-relaxed border-t border-slate-700 pt-2">
-                    {q.reference}
-                  </p>
+                  <p className="text-slate-500 text-xs mt-2 leading-relaxed border-t border-slate-700 pt-2">{q.reference}</p>
                 )}
 
                 <div className="mt-3">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    !q.attempted                       ? 'bg-slate-700 text-slate-300'
-                    : q.priority <= THRESHOLD_EASY     ? 'bg-emerald-900 text-emerald-300'
+                    !q.attempted                          ? 'bg-slate-700 text-slate-300'
+                    : q.priority <= THRESHOLD_EASY        ? 'bg-emerald-900 text-emerald-300'
                     : q.priority <= THRESHOLD_IN_PROGRESS ? 'bg-blue-900 text-blue-300'
-                    : q.priority < THRESHOLD_HARD      ? 'bg-amber-900 text-amber-300'
+                    : q.priority < THRESHOLD_HARD         ? 'bg-amber-900 text-amber-300'
                     : 'bg-red-900 text-red-300'
                   }`}>
-                    {!q.attempted                         ? '○ New'
-                      : q.priority <= THRESHOLD_EASY      ? '🟢 Easy'
+                    {!q.attempted                           ? '○ New'
+                      : q.priority <= THRESHOLD_EASY        ? '🟢 Easy'
                       : q.priority <= THRESHOLD_IN_PROGRESS ? '🔵 In Progress'
-                      : q.priority < THRESHOLD_HARD       ? '🟡 Review'
+                      : q.priority < THRESHOLD_HARD         ? '🟡 Review'
                       : '🔴 Hard'}
                   </span>
                 </div>
@@ -128,5 +128,32 @@ export default function Review({ incorrectQuestions, everIncorrectQuestions, que
         </div>
       )}
     </div>
+  )
+}
+
+interface TabButtonProps {
+  active: boolean
+  colour: 'red' | 'amber' | 'yellow'
+  onClick: () => void
+  label: string
+  count: number
+}
+
+function TabButton({ active, colour, onClick, label, count }: TabButtonProps) {
+  const activeClass =
+    colour === 'red'   ? 'bg-red-700 text-white'
+    : colour === 'amber' ? 'bg-amber-700 text-white'
+    : 'bg-yellow-700 text-white'
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
+        active ? activeClass : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+      }`}
+    >
+      {label}
+      <span className="ml-2 text-xs opacity-70">({count})</span>
+    </button>
   )
 }
