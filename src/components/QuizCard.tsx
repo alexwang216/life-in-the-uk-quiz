@@ -9,9 +9,12 @@ interface Props {
   submitted: boolean
   isAnswered: boolean
   wasLastCorrect: boolean
+  isMarked: boolean
   onAnswer: (answer: Answer) => void
   onSubmit: () => void
   onNext: () => void
+  onReview: () => void
+  onToggleReview: () => void
   priority: number
 }
 
@@ -23,7 +26,7 @@ function buildClaudeUrl(question: string, correctAnswers: string[]): string {
 
 export default function QuizCard({
   question, shuffledAnswers, selectedAnswer, selectedAnswers,
-  submitted, isAnswered, wasLastCorrect, onAnswer, onSubmit, onNext, priority,
+  submitted, isAnswered, wasLastCorrect, isMarked, onAnswer, onSubmit, onNext, onReview, onToggleReview, priority,
 }: Props) {
   const isMulti = question.isMulti
   const correctAnswers = shuffledAnswers.filter(a => a.is_correct)
@@ -149,6 +152,26 @@ export default function QuizCard({
             className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition-colors"
           >
             Next Question →
+          </button>
+
+          {/* 2. Go to Review — secondary action */}
+          <button
+            onClick={onReview}
+            className="w-full py-2.5 rounded-xl border-2 border-slate-600 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium"
+          >
+            📝 Go to Review
+          </button>
+
+          {/* 3. Mark for Review — toggle bookmark on this question */}
+          <button
+            onClick={onToggleReview}
+            className={`w-full py-2.5 rounded-xl border-2 transition-colors text-sm font-medium ${
+              isMarked
+                ? 'border-yellow-600 bg-yellow-900 text-yellow-300 hover:bg-yellow-800'
+                : 'border-slate-600 text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            {isMarked ? '★ Marked for Review' : '☆ Mark for Review'}
           </button>
 
           {/* 2. Reference */}
